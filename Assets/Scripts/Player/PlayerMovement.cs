@@ -17,6 +17,11 @@ public class PlayerMovement : MonoBehaviour
     private float stopFrictionX;
     private float stopFrictionY;
 
+    // Fields for boundary constraints
+    private Vector2 screenBounds;
+    private float objectWidth;
+    private float objectHeight;
+
     void Start()
     {
         // Mengambil komponen Rigidbody2D
@@ -29,11 +34,42 @@ public class PlayerMovement : MonoBehaviour
         moveFrictionY = (-2 * maxSpeed.y) / Mathf.Pow(timeToFullSpeed.y, 2);
         stopFrictionX = (-2 * maxSpeed.x) / Mathf.Pow(timeToStop.x, 2);
         stopFrictionY = (-2 * maxSpeed.y) / Mathf.Pow(timeToStop.y, 2);
+
+        // Set screen bounds untuk pengujian
+        screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, Camera.main.transform.position.z));
+        
+        // Debug log untuk memastikan nilai screenBounds
+        Debug.Log("Screen Bounds: " + screenBounds);
+
+        // Cek dimensi objek menggunakan SpriteRenderer atau BoxCollider2D sebagai alternatif
+        var spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            objectWidth = spriteRenderer.bounds.extents.x;
+            objectHeight = spriteRenderer.bounds.extents.y;
+        }
+        else
+        {
+            var boxCollider = GetComponent<BoxCollider2D>();
+            if (boxCollider != null)
+            {
+                objectWidth = boxCollider.bounds.extents.x;
+                objectHeight = boxCollider.bounds.extents.y;
+            }
+            else
+            {
+                Debug.LogWarning("No SpriteRenderer or BoxCollider2D found on Player. Please add one of these components.");
+            }
+        }
+        
+        // Debug log untuk memeriksa dimensi objek
+        Debug.Log("Object Width: " + objectWidth + ", Object Height: " + objectHeight);
     }
 
     void FixedUpdate()
     {
         Move(); // Memanggil fungsi Move setiap frame fisik untuk menggerakkan Player
+        ConstrainToScreen(); // Batasi pergerakan pesawat agar tidak keluar dari batas layar
     }
 
     public void Move()
@@ -47,14 +83,23 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKey(KeyCode.D)) inputX = 1f; // Tombol D untuk ke kanan
         if (Input.GetKey(KeyCode.A)) inputX = -1f; // Tombol A untuk ke kiri
 
-        // Debug log untuk memeriksa apakah input diterima
-        Debug.Log("Input X: " + inputX + ", Input Y: " + inputY);
-
         // Menentukan arah dan kecepatan
         moveDirection = new Vector2(inputX, inputY).normalized;
 
         // Memperbarui kecepatan langsung berdasarkan arah dan kecepatan maksimum
-        rb.velocity = moveDirection * maxSpeed.x; // Menggunakan kecepatan maxSpeed.x
+        rb.velocity = moveDirection * maxSpeed.x;
+    }
+
+    private void ConstrainToScreen()
+    {
+        // Membatasi posisi pemain di dalam batas layar
+        Vector3 pos = transform.position;
+        
+        // Menggunakan nilai batas yang disesuaikan
+        pos.x = Mathf.Clamp(pos.x, -screenBounds.x + objectWidth, screenBounds.x - objectWidth);
+        pos.y = Mathf.Clamp(pos.y, -screenBounds.y + objectHeight, screenBounds.y - objectHeight);
+        
+        transform.position = pos; // Memperbarui posisi dengan batasan yang diterapkan
     }
 
     private Vector2 GetFriction()
@@ -68,7 +113,6 @@ public class PlayerMovement : MonoBehaviour
     public bool IsMoving()
     {
         // Mengembalikan true jika pemain bergerak, jika tidak maka false
-        //return rb.velocity.magnitude > 0;
         return rb.velocity.magnitude > stopClamp.magnitude;
     }
 }
