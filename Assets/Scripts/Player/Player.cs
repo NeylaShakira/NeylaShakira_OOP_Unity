@@ -2,9 +2,22 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public static Player Instance{
+        get; set; 
+    }
     private PlayerMovement playerMovement;
     private Animator animator;
+    public Weapon thisweapon;
 
+    void Awake()
+    {
+        if (Instance !=null && Instance!= this){
+            Destroy(gameObject);
+        }else{
+            Instance=this;
+            DontDestroyOnLoad(gameObject);
+        }
+    }
     void Start()
     {
         // Mengambil komponen PlayerMovement dan Animator

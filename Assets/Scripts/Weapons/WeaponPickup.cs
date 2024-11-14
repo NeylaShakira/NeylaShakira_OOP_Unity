@@ -10,29 +10,39 @@ public class WeaponPickup : MonoBehaviour
     private void Awake()
     {
         weapon = weaponHolder; // Menginisialisasi weapon dengan weaponHolder
+        Debug.Log($"Weapon picked up");
     }
 
     private void Start()
     {
-        if (weapon != null)
-        {
-            TurnVisual(false); // Menonaktifkan visual senjata pada awal
-        }
+        // if (weapon != null)
+        // {
+        //     TurnVisual(false); // Menonaktifkan visual senjata pada awal
+        // }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && weapon != null)
         {
             // Mengambil komponen Weapon dari Player
-            Weapon bebas = other.GetComponentInChildren<Weapon>();
+            Player player = other.GetComponent<Player>(); 
 
-            if (bebas != null)
+            if (player.thisweapon != null)
             {
-                // Set weapon as child of player
-                weapon.transform.parent = other.transform; 
-                TurnVisual(false, bebas); // Memanggil TurnVisual dengan weapon baru
+                player.thisweapon.gameObject.SetActive(false); // Menonaktifkan senjata lama
             }
+
+            // Instansiasi senjata tanpa parent terlebih dahulu
+            Weapon bebas = Instantiate(weapon);
+
+            // Set parent setelah instansiasi
+            bebas.transform.SetParent(other.transform);
+            bebas.transform.localPosition = Vector2.zero;
+            bebas.transform.localRotation = Quaternion.identity;
+
+            player.thisweapon = bebas; // Mengatur senjata yang baru ke player
+            TurnVisual(true, bebas); // Memanggil TurnVisual dengan weapon baru
         }
     }
 
@@ -41,9 +51,8 @@ public class WeaponPickup : MonoBehaviour
         gameObject.SetActive(on); // Mengubah status aktif objek visual
     }
 
-    private void TurnVisual(bool on, Weapon newWeapon)
+    private void TurnVisual(bool on, Weapon weapon)
     {
-        weapon = newWeapon; // Mengatur senjata baru
-        gameObject.SetActive(on); // Mengubah tampilan visual
+        weapon.gameObject.SetActive(on); // Mengubah tampilan visual senjata
     }
 }

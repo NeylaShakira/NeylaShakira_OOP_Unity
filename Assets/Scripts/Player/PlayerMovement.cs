@@ -27,6 +27,9 @@ public class PlayerMovement : MonoBehaviour
         // Mengambil komponen Rigidbody2D
         rb = GetComponent<Rigidbody2D>();
 
+        // Menambahkan pembekuan rotasi pada Rigidbody2D
+        rb.freezeRotation = true;
+
         // Menghitung nilai-nilai awal untuk akselerasi dan gesekan
         moveVelocityX = (2 * maxSpeed.x) / timeToFullSpeed.x;
         moveVelocityY = (2 * maxSpeed.y) / timeToFullSpeed.y;
